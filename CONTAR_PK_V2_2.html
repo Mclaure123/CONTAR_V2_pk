@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocolo Cero: Guardianes del Jardín Estelar (Beta 1.0)</title>
+
+    <style>
+        /* CSS sin cambios, excepto la regla .numeric-btn svg */
+        :root { --bg-color: #F0F2F5; --text-color: #343A40; --accent-color: #007BFF; --success-color: #28a745; --warning-color: #ffc107; --error-color: #dc3545; --white-pure: #FFFFFF; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Consolas', 'Menlo', 'Monaco', monospace; user-select: none; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; }
+        .main-container { width: 90vw; height: 95vh; max-width: 500px; max-height: 900px; background-color: var(--white-pure); border: 2px solid #dee2e6; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        @media (min-width: 768px) { .main-container { width: 60vw; height: 80vh; max-width: 800px; } }
+        .screen { width: 100%; height: 100%; padding: 20px; display: none; flex-direction: column; align-items: center; justify-content: space-around; text-align: center; gap: 20px; animation: fadeIn 0.5s ease-in-out; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        .title-large { font-size: clamp(2rem, 8vw, 3.5rem); color: var(--text-color); font-weight: bold; }
+        .subtitle { font-size: clamp(1rem, 4vw, 1.5rem); color: #6c757d; }
+        .btn { padding: 15px 30px; font-size: clamp(1rem, 4vw, 1.5rem); border: none; border-radius: 8px; cursor: pointer; background-color: var(--accent-color); color: var(--white-pure); transition: transform 0.1s ease, box-shadow 0.2s ease; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); font-weight: bold; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        .btn:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-success { background-color: var(--success-color); }
+        #screenPreload { background-color: #0A0A0A; color: #FFB800; justify-content: flex-start; align-items: flex-start; padding: 15px; font-size: clamp(0.7rem, 2vw, 0.9rem); }
+        #preload-log { list-style-type: none; width: 100%; }
+        #preload-log li { white-space: pre-wrap; }
+        #name-input-display { width: 80%; height: 60px; border: 2px solid #ced4da; border-radius: 8px; font-size: 2rem; text-align: center; letter-spacing: 8px; color: var(--accent-color); line-height: 60px; }
+        #keyboard-container { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+        .keyboard-row { display: flex; justify-content: center; gap: 5px; }
+        .key { height: 50px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff; display: flex; justify-content: center; align-items: center; font-size: clamp(1rem, 3vw, 1.2rem); font-weight: bold; cursor: pointer; transition: background-color 0.1s; position: relative; }
+        .key:active { background-color: #adb5bd; }
+        .key-letter { width: calc(10% - 5px); }
+        .key-enter, .key-shift, .key-backspace { width: calc(15% - 5px); }
+        .key-space { width: 50%; }
+        .key .char-upper { display: none; }
+        .shift-active .char-lower { display: none; }
+        .shift-active .char-upper { display: inline; }
+        .key-shift.active { background-color: var(--success-color); color: var(--white-pure); }
+        #category-list { display: flex; flex-direction: column; gap: 20px; width: 90%; }
+        .category-button { padding: 20px; border: 2px solid #ced4da; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; position: relative; }
+        .category-button.mastered { border-color: var(--success-color); background-color: #e9f7ef; }
+        .category-button.mastered .mastery-icon { display: inline; }
+        .category-button h3 { font-size: 1.5rem; margin-bottom: 5px; }
+        .category-button p { font-size: 1rem; color: #6c757d; }
+        .mastery-icon { display: none; position: absolute; top: 10px; right: 15px; font-size: 1.8rem; color: var(--success-color); }
+        #screenGame { justify-content: space-between; }
+        #task-instruction { font-size: clamp(1.2rem, 5vw, 1.5rem); font-weight: bold; padding: 10px; background-color: #e9ecef; border-radius: 8px; width: 95%; flex-shrink: 0; }
+        #game-area { width: 100%; flex-grow: 1; position: relative; border: 2px dashed #ced4da; border-radius: 8px; margin: 15px 0; min-height: 200px; }
+        #numeric-controller { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; flex-shrink: 0; }
+        .numeric-btn { width: 80px; height: 80px; font-size: 3rem; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        
+        /* REGLA CSS MODIFICADA */
+        .numeric-btn svg { width: 70%; height: 70%; fill: var(--white-pure); }
+        
+        #count-display { font-size: clamp(3rem, 12vw, 4rem); font-weight: bold; min-width: 100px; text-align: center; }
+        #confirm-button-container { width: 100%; flex-shrink: 0; }
+        #btn-confirm { width: 90%; padding: 20px; }
+        .glyph { position: absolute; width: 90%; height: 90%; transition: transform 0.2s ease; }
+        .glyph:hover { transform: scale(1.1); }
+        .glyph svg { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2)); }
+        #transition-icon { font-size: 6rem; }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <!-- HTML ESTRUCTURAL SIN CAMBIOS -->
+        <div id="screenPreload" class="screen active">
+            <ul id="preload-log"></ul>
+        </div>
+
+        <div id="screenTitle" class="screen">
+            <div style="text-align: center;">
+                <h1 class="title-large">Guardianes del</h1>
+                <h1 class="title-large">Jardín Estelar</h1>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px; width: 80%;">
+                <button id="btn-start" class="btn">INICIAR</button>
+                <button id="btn-change-player" class="btn btn-secondary">CAMBIAR JUGADOR</button>
+            </div>
+            <p id="current-player-display">Jugador: NADIE</p>
+        </div>
+        
+        <div id="screenName" class="screen">
+            <h2 class="subtitle">Escribe tu nombre (máx 5 letras)</h2>
+            <div id="name-input-display"></div>
+            <div id="keyboard-container"></div>
+        </div>
+
+        <div id="screenCategory" class="screen">
+            <h2 class="title-large">Elige una Misión</h2>
+            <div id="category-list"></div>
+        </div>
+        
+        <div id="screenGame" class="screen">
+            <div id="task-instruction"></div>
+            <div id="game-area"></div>
+            <div id="numeric-controller">
+                <button id="btn-decrease" class="btn numeric-btn btn-secondary">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 13H5v-2h14v2z"/>
+                    </svg>
+                </button>
+                <span id="count-display">0</span>
+                <button id="btn-increase" class="btn numeric-btn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="confirm-button-container">
+                <button id="btn-confirm" class="btn btn-success">LISTO</button>
+            </div>
+        </div>
+
+        <div id="screenTransition" class="screen">
+            <div id="transition-icon"></div>
+            <h1 id="transition-message" class="title-large"></h1>
+            <h3 id="transition-submessage" class="subtitle"></h3>
+        </div>
+    </div>
+
+    <script>
+    // =========================================================================== //
+    // == PROTOCOLO CERO v2.8 - CORE LOGIC (BETA 1.0)                             == //
+    // =========================================================================== //
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // EL CÓDIGO JAVASCRIPT PERMANECE IDÉNTICO AL DE LA VERSIÓN ANTERIOR (v1.2)
+        // DADO QUE EL CAMBIO ES PURAMENTE VISUAL (CSS)
+        
+        const dom = { screens: document.querySelectorAll('.screen'), preload: { log: document.getElementById('preload-log') }, title: { startBtn: document.getElementById('btn-start'), changePlayerBtn: document.getElementById('btn-change-player'), playerDisplay: document.getElementById('current-player-display') }, name: { display: document.getElementById('name-input-display'), keyboard: document.getElementById('keyboard-container') }, category: { list: document.getElementById('category-list') }, game: { instruction: document.getElementById('task-instruction'), area: document.getElementById('game-area'), decreaseBtn: document.getElementById('btn-decrease'), increaseBtn: document.getElementById('btn-increase'), countDisplay: document.getElementById('count-display'), confirmBtn: document.getElementById('btn-confirm') }, transition: { icon: document.getElementById('transition-icon'), message: document.getElementById('transition-message'), submessage: document.getElementById('transition-submessage') } };
+        const config = { nameMaxLength: 5, masteryGoal: 5, categories: { vivero: { id: 'vivero', name: "El Vivero de Estrellas", range: [1, 10] }, bosque: { id: 'bosque', name: "El Bosque Brillante", range: [11, 25] }, nebulosa: { id: 'nebulosa', name: "La Nebulosa Perdida", range: [26, 50] } } };
+        let state = { activeScreen: 'screenPreload', currentPlayer: null, currentGame: { category: null, correctAnswer: 0, playerAnswer: 0, taskGlyph: null } };
+        const GlyphLibrary = { _library: [ { id: 'estrella', name: 'ESTRELLAS', svg: `<svg viewBox="0 0 24 24" fill="#FFC107"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>` }, { id: 'corazon', name: 'CORAZONES', svg: `<svg viewBox="0 0 24 24" fill="#E91E63"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` }, { id: 'luna', name: 'LUNAS', svg: `<svg viewBox="0 0 24 24" fill="#607D8B"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8c.04 0 .08 0 .12.01C7.87 5.17 5 8.32 5 12s2.87 6.83 6.99 7.99c-.03.01-.06.01-.09.01z"/></svg>` }, { id: 'planeta', name: 'PLANETAS', svg: `<svg viewBox="0 0 24 24" fill="#03A9F4"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93s3.05-7.44 7-7.93v15.86zm2-15.86c3.95.49 7 3.85 7 7.93s-3.05 7.44-7 7.93V4.07z"/></svg>` }, { id: 'rayo', name: 'RAYOS', svg: `<svg viewBox="0 0 24 24" fill="#FFEB3B"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>` }, { id: 'triangulo', name: 'TRIANGULOS', svg: `<svg viewBox="0 0 24 24" fill="#4CAF50"><path d="M1 21h22L12 2 1 21z"/></svg>` }, { id: 'nube', name: 'NUBES', svg: `<svg viewBox="0 0 24 24" fill="#BDBDBD"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>` } ], getRandom() { const randomIndex = Math.floor(Math.random() * this._library.length); return this._library[randomIndex]; } };
+        const PlayerManager = { players: [], storageKey: 'starGuardiansPlayers', lastPlayerKey: 'starGuardians_lastActivePlayer', load() { const data = localStorage.getItem(this.storageKey); this.players = data ? JSON.parse(data) : []; }, save() { localStorage.setItem(this.storageKey, JSON.stringify(this.players)); }, getLastActive() { return localStorage.getItem(this.lastPlayerKey); }, setLastActive(name) { if (name) { localStorage.setItem(this.lastPlayerKey, name); } else { localStorage.removeItem(this.lastPlayerKey); } }, findOrCreate(name) { let player = this.players.find(p => p.name === name); if (!player) { player = { name: name, mastery: { vivero: false, bosque: false, nebulosa: false }, streaks: { vivero: 0, bosque: 0, nebulosa: 0 } }; this.players.push(player); } state.currentPlayer = player; this.setLastActive(player.name); this.save(); return player; }, updateStreak(categoryKey, isCorrect) { if (!state.currentPlayer) return; if (isCorrect) { state.currentPlayer.streaks[categoryKey]++; if (state.currentPlayer.streaks[categoryKey] >= config.masteryGoal) { state.currentPlayer.mastery[categoryKey] = true; } } else { state.currentPlayer.streaks[categoryKey] = 0; } this.save(); } };
+        const App = { init() { PlayerManager.load(); const lastPlayerName = PlayerManager.getLastActive(); if (lastPlayerName) { const lastPlayer = PlayerManager.players.find(p => p.name === lastPlayerName); if (lastPlayer) { state.currentPlayer = lastPlayer; } } this.updatePlayerDisplay(); this.runPreloadSequence(); this.setupEventListeners(); this.generateKeyboard(); }, showScreen(screenId) { state.activeScreen = screenId; dom.screens.forEach(s => s.classList.remove('active')); document.getElementById(screenId).classList.add('active'); }, updatePlayerDisplay() { dom.title.playerDisplay.textContent = state.currentPlayer ? `Jugador: ${state.currentPlayer.name}` : `Jugador: NINGUNO`; }, runPreloadSequence() { const log = dom.preload.log; const steps = [ "PROTOCOL CERO v2.8 INITIALIZING...", "COMPILING BUILD: BETA 1.0", "SESSION PERSISTENCE CHECK...", state.currentPlayer ? `OK. WELCOME BACK, ${state.currentPlayer.name}` : "OK. NO ACTIVE SESSION", "DOM INTEGRITY CHECK... OK", "RENDER ENGINE... STABLE", "BOOT SEQUENCE COMPLETE." ]; let i = 0; const interval = setInterval(() => { if (i < steps.length) { const li = document.createElement('li'); li.textContent = steps[i]; log.appendChild(li); i++; } else { clearInterval(interval); setTimeout(() => this.showScreen('screenTitle'), 500); } }, 250); }, generateKeyboard() { const layout=[['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L','ENTER'],['SHIFT','Z','X','C','V','B','N','M','BACKSPACE'],['SPACE']]; layout.forEach(row=>{ const rowDiv=document.createElement('div'); rowDiv.className='keyboard-row'; row.forEach(key=>{ const keyDiv=document.createElement('div'); keyDiv.className='key'; if(key.length>1){ keyDiv.classList.add(`key-${key.toLowerCase()}`); keyDiv.textContent=key; }else{ keyDiv.classList.add('key-letter'); const lower=document.createElement('span'); lower.className='char-lower'; lower.textContent=key.toLowerCase(); const upper=document.createElement('span'); upper.className='char-upper'; upper.textContent=key.toUpperCase(); keyDiv.appendChild(upper); keyDiv.appendChild(lower); } keyDiv.dataset.key=key; rowDiv.appendChild(keyDiv); }); dom.name.keyboard.appendChild(rowDiv); }); }, handleKeyPress(key) { const display = dom.name.display; let currentName = display.textContent; if (key === 'BACKSPACE') { display.textContent = currentName.slice(0, -1); } else if (key === 'ENTER') { if (currentName.trim().length > 0) { PlayerManager.findOrCreate(currentName.trim()); this.updatePlayerDisplay(); this.buildCategoryScreen(); this.showScreen('screenCategory'); } } else if (key === 'SHIFT') { dom.name.keyboard.classList.toggle('shift-active'); dom.name.keyboard.querySelector('.key-shift').classList.toggle('active'); } else if (currentName.length < config.nameMaxLength) { const isShiftActive = dom.name.keyboard.classList.contains('shift-active'); const char = isShiftActive ? key.toUpperCase() : key.toLowerCase(); display.textContent += (key === 'SPACE') ? ' ' : char; } }, buildCategoryScreen() { dom.category.list.innerHTML = ''; Object.values(config.categories).forEach(cat => { const btn = document.createElement('div'); btn.className = 'category-button'; btn.dataset.categoryId = cat.id; if (state.currentPlayer.mastery[cat.id]) { btn.classList.add('mastered'); } btn.innerHTML = `<span class="mastery-icon">&#9733;</span><h3>${cat.name}</h3><p>Contar de ${cat.range[0]} a ${cat.range[1]}</p>`; btn.addEventListener('click', () => Game.start(cat.id)); dom.category.list.appendChild(btn); }); }, setupEventListeners() { dom.title.startBtn.addEventListener('click', () => { if (state.currentPlayer) { this.buildCategoryScreen(); this.showScreen('screenCategory'); } else { dom.name.display.textContent = ''; this.showScreen('screenName'); } }); dom.title.changePlayerBtn.addEventListener('click', () => { state.currentPlayer = null; PlayerManager.setLastActive(null); this.updatePlayerDisplay(); dom.name.display.textContent = ''; this.showScreen('screenName'); }); dom.name.keyboard.addEventListener('click', (e) => { if (e.target.closest('.key')) { this.handleKeyPress(e.target.closest('.key').dataset.key); } }); dom.game.increaseBtn.addEventListener('click', () => Game.updateCount(1)); dom.game.decreaseBtn.addEventListener('click', () => Game.updateCount(-1)); dom.game.confirmBtn.addEventListener('click', () => Game.checkAnswer()); } };
+        const Game = { start(categoryId) { state.currentGame.category = config.categories[categoryId]; const [min, max] = state.currentGame.category.range; state.currentGame.correctAnswer = Math.floor(Math.random() * (max - min + 1)) + min; state.currentGame.taskGlyph = GlyphLibrary.getRandom(); dom.game.instruction.textContent = `CUENTA TODOS LOS ${state.currentGame.taskGlyph.name}`; this.resetCount(); this.renderGlyphs(); App.showScreen('screenGame'); }, renderGlyphs() { dom.game.area.innerHTML = ''; const glyphCount = state.currentGame.correctAnswer; const cols = 7; const rows = 6; const cellCount = cols * rows; const cellWidth = 100 / cols; const cellHeight = 100 / rows; let cellPositions = Array.from({ length: cellCount }, (_, i) => i); for (let i = cellPositions.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cellPositions[i], cellPositions[j]] = [cellPositions[j], cellPositions[i]]; } const chosenCells = cellPositions.slice(0, glyphCount); chosenCells.forEach(cellIndex => { const col = cellIndex % cols; const row = Math.floor(cellIndex / cols); const jitterX = (Math.random() - 0.5) * (cellWidth * 0.1); const jitterY = (Math.random() - 0.5) * (cellHeight * 0.1); const left = col * cellWidth + jitterX; const top = row * cellHeight + jitterY; const glyphWrapper = document.createElement('div'); glyphWrapper.className = 'glyph'; glyphWrapper.style.left = `${left}%`; glyphWrapper.style.top = `${top}%`; glyphWrapper.style.width = `${cellWidth}%`; glyphWrapper.style.height = `${cellHeight}%`; glyphWrapper.innerHTML = state.currentGame.taskGlyph.svg; dom.game.area.appendChild(glyphWrapper); }); }, updateCount(value) { state.currentGame.playerAnswer += value; if (state.currentGame.playerAnswer < 0) { state.currentGame.playerAnswer = 0; } if (state.currentGame.playerAnswer > 99) { state.currentGame.playerAnswer = 99; } dom.game.countDisplay.textContent = state.currentGame.playerAnswer; }, resetCount() { state.currentGame.playerAnswer = 0; dom.game.countDisplay.textContent = 0; }, checkAnswer() { const isCorrect = state.currentGame.playerAnswer === state.currentGame.correctAnswer; PlayerManager.updateStreak(state.currentGame.category.id, isCorrect); if (isCorrect) { dom.transition.icon.textContent = '🎉'; dom.transition.message.textContent = '¡EXCELENTE!'; dom.transition.submessage.textContent = `Contaste ${state.currentGame.correctAnswer} ${state.currentGame.taskGlyph.name.toLowerCase()}!`; } else { dom.transition.icon.textContent = '🤔'; dom.transition.message.textContent = 'CASI, ¡VAMOS DE NUEVO!'; dom.transition.submessage.textContent = `La respuesta correcta era ${state.currentGame.correctAnswer}.`; } App.showScreen('screenTransition'); setTimeout(() => { if (isCorrect) { App.buildCategoryScreen(); App.showScreen('screenCategory'); } else { this.resetCount(); App.showScreen('screenGame'); } }, 2800); } };
+
+        App.init();
+    });
+    </script>
+
+</body>
+</html>
